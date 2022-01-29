@@ -1,6 +1,8 @@
 package com.samuelweller.Location;
 
-public class KnownLocation {
+import java.io.Serializable;
+
+public class KnownLocation implements Serializable {
 
 	private String name, description;;
 	private double lng, lat;
