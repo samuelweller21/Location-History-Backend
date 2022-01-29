@@ -38,7 +38,7 @@ public class LocationHistoryViewerApplication implements CommandLineRunner {
 //		System.out.println(parse.size());
 //		System.out.println("Time taken to parse alone: " + (System.currentTimeMillis() - currentTimeMillis)/1000 + "s");
 //	    
-//		AWS.TESTcreateObject();
+		AWS.TESTcreateObject();
 	
 	}
 
