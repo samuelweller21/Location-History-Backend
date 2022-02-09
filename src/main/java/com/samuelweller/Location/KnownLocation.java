@@ -4,14 +4,24 @@ import java.io.Serializable;
 
 public class KnownLocation implements Serializable {
 
+	private static final long serialVersionUID = 1112434620260534679L;
 	private String name, description;;
-	private double lng, lat;
+	private double lng, lat, radius;
 	
-	public KnownLocation(String name, double lng, double lat) {
+	public double getRadius() {
+		return radius;
+	}
+
+	public void setRadius(double radius) {
+		this.radius = radius;
+	}
+
+	public KnownLocation(String name, double lng, double lat, double radius) {
 		super();
 		this.name = name;
 		this.lng = lng;
 		this.lat = lat;
+		this.radius = radius;
 	}
 	
 	public KnownLocation(String name, String description, double lat, double lng) {
@@ -24,6 +34,13 @@ public class KnownLocation implements Serializable {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public String toString() {
+		return "KnownLocation [name=" + name + ", description=" + description + ", lng=" + lng + ", lat=" + lat
+				+ ", radius=" + radius + "]";
+	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -45,6 +62,5 @@ public class KnownLocation implements Serializable {
 	public void setLat(double lat) {
 		this.lat = lat;
 	}
-	
 	
 }

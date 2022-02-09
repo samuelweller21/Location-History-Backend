@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,14 +55,23 @@ public class RESTController {
 	
 	// Posts
 	
-	@PostMapping(path = "/addKnownLocation/{user}/{name}/{lng}/{lat}")
-	public void addKnownLocation(@PathVariable String user, @PathVariable String name, @PathVariable double lng, @PathVariable double lat) {
-		AWS.addKnownLocation(user, new KnownLocation(user, lng, lat));
+	@PostMapping(path = "/addKnownLocation/{user}/{name}/{lat}/{lng}/{radius}")
+	public void addKnownLocation(@PathVariable String user, @PathVariable String name, 
+			@PathVariable double lat, 
+			@PathVariable double lng,
+			@PathVariable double radius) {
+		AWS.addKnownLocation(user, new KnownLocation(name, lng, lat, radius));
+		System.out.println("Created " + name + " in " + user);
 	}
 	
-	@PostMapping(path = "/removeKnownLocation/{user}/{name}/{lng}/{lat}")
-	public void removeKnownLocation(@PathVariable String user, @PathVariable String name, @PathVariable double lng, @PathVariable double lat) {
-		AWS.removeKnownLocation(user, new KnownLocation(user, lng, lat));
+	@PostMapping(path = "/removeKnownLocation/{user}/{name}")
+	public ResponseEntity<String> removeKnownLocation(@PathVariable String user, @PathVariable String name) {
+		List<KnownLocation> kl = AWS.getKnownLocations(user);
+		KnownLocation toDelete = kl.stream().filter(loc -> loc.getName().equals(name)).findFirst().get();
+		System.out.println(toDelete);
+		AWS.removeKnownLocation(user, toDelete);
+		System.out.println("Deleted " + toDelete + " from " + user);
+		return ResponseEntity.status(HttpStatus.OK).body("Deleted object");
 	}
 	
 }

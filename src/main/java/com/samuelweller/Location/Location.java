@@ -6,6 +6,8 @@ import com.samuelweller.JSONParsing.GoogleJSONMapper;
 
 public class Location implements Serializable {
 
+	private static final long serialVersionUID = 7648747914493611668L;
+	
 	private double lng;
 	private double lat;
 	private long timestamp;

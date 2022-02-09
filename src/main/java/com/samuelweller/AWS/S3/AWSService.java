@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -103,6 +104,22 @@ public class AWSService {
 			e.printStackTrace();
 		}
 
+		List<KnownLocation> kl = new ArrayList<>();
+		kl.add(new KnownLocation("Location 1", 10,20, 50));
+		kl.add(new KnownLocation("Location 2", 30,40, 50));
+		kl.add(new KnownLocation("Location 3", 50,60, 50));
+		kl.add(new KnownLocation("Location 4",70,80, 50));
+		kl.add(new KnownLocation("Location 5", 10,20, 50));
+		kl.add(new KnownLocation("Location 6", 30,40, 50));
+		kl.add(new KnownLocation("Location 7", 50,60, 50));
+		kl.add(new KnownLocation("Location 8",70,80, 50));
+		kl.add(new KnownLocation("Location 9", 10,20, 50));
+		kl.add(new KnownLocation("Location 10", 30,40, 50));
+		kl.add(new KnownLocation("Location 11", 50,60, 50));
+		kl.add(new KnownLocation("Location 12",70,80, 50));
+//		
+		this.createKnownLocationsIfCan("sweller", kl);
+		
 		// Create Object
 		this.createLocationsIfCan("sweller", data);
 	}
@@ -423,8 +440,13 @@ public class AWSService {
 	@CacheEvict(value = "knownLocations", key = "#user")
 	public void removeKnownLocation(String user, KnownLocation knownLocation) {
 		List<KnownLocation> knownLocations = this.getKnownLocations(user);
-		knownLocations.remove(knownLocation);
+		System.out.println(knownLocations);
+		System.out.println("Location to remove: " + knownLocation);
+		List<KnownLocation> newKnownLocations = knownLocations.stream()
+				.filter(loc -> !loc.getName().equals(knownLocation.getName()))
+				.collect(Collectors.toList());
+		System.out.println(newKnownLocations);
 		this.deleteIfExists(user + " - known locations");
-		this.createKnownLocationsIfCan(user, knownLocations);
+		this.createKnownLocationsIfCan(user, newKnownLocations);
 	}
 }
