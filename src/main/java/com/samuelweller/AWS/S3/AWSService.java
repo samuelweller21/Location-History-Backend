@@ -8,6 +8,9 @@ import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +22,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.samuelweller.JSONParsing.JSONParser;
 import com.samuelweller.Location.KnownLocation;
 import com.samuelweller.Location.Location;
 import com.samuelweller.LocationService.LL;
@@ -92,6 +96,8 @@ public class AWSService {
 	}
 
 	public void TESTcreateObject() {
+		
+		System.out.println("Parsing ... ");
 
 		// Read data from csv
 		List<Location> data = null;
@@ -103,25 +109,25 @@ public class AWSService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		String json = null;
+		try {
+			json = Files.readString(Path.of(this.getClass().getResource("/static/locations.json").toURI()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		long currentTimeMillis = System.currentTimeMillis();
+		List<Location> parse = JSONParser.parse(json);
+		System.out.println(parse.size());
+		System.out.println("Time taken to parse alone: " + (System.currentTimeMillis() - currentTimeMillis)/1000 + "s");
 
-		List<KnownLocation> kl = new ArrayList<>();
-		kl.add(new KnownLocation("Location 1", 10,20, 50));
-		kl.add(new KnownLocation("Location 2", 30,40, 50));
-		kl.add(new KnownLocation("Location 3", 50,60, 50));
-		kl.add(new KnownLocation("Location 4",70,80, 50));
-		kl.add(new KnownLocation("Location 5", 10,20, 50));
-		kl.add(new KnownLocation("Location 6", 30,40, 50));
-		kl.add(new KnownLocation("Location 7", 50,60, 50));
-		kl.add(new KnownLocation("Location 8",70,80, 50));
-		kl.add(new KnownLocation("Location 9", 10,20, 50));
-		kl.add(new KnownLocation("Location 10", 30,40, 50));
-		kl.add(new KnownLocation("Location 11", 50,60, 50));
-		kl.add(new KnownLocation("Location 12",70,80, 50));
-//		
-		this.createKnownLocationsIfCan("sweller", kl);
 		
 		// Create Object
-		this.createLocationsIfCan("sweller", data);
+		this.createLocationsIfCan("sweller", parse);
 	}
 
 	private void createLocationsIfCan(String user, List<Location> locations) {

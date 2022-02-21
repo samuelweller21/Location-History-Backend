@@ -11,16 +11,31 @@ public class Location implements Serializable {
 	private double lng;
 	private double lat;
 	private long timestamp;
+	private double accuracy;
 	
+	public double getAccuracy() {
+		return accuracy;
+	}
+
+	public void setAccuracy(double accuracy) {
+		this.accuracy = accuracy;
+	}
+
 	public Location(double lng, double lat, long timestamp) {
 		this.lng = lng;
 		this.lat = lat;
 		this.timestamp = timestamp;
 	}
 	
+	public Location(KnownLocation kl) {
+		this.lng = kl.getLng();
+		this.lat = kl.getLat();
+	}
+	
 	public Location(GoogleJSONMapper json) {
 		this.lng = json.getLongitudeE7();
 		this.lat = json.getLatitudeE7();
+		this.accuracy = json.getAccuracy();
 		this.timestamp = (long) json.getTimestampMs();
 	}
 

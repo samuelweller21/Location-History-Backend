@@ -1,6 +1,11 @@
 package com.samuelweller.JSONParsing;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +81,20 @@ public class JSONParser {
 		
 		for (int i = 1; i < (clean.size()-1); i++) {
 			
+			// If new day - add
+			
+			Date date = Date.from(Instant.ofEpochMilli(locations.get(locations.size()-1).getTimestamp()*1000));
+			LocalDate ldate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			long day_before = ldate.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+			long day_after = ldate.atStartOfDay().plusDays(1L).toEpochSecond(ZoneOffset.UTC);
+			
+//			System.out.println("TS: " + clean.get(i).getTimestampMs());
+//			System.out.println("Day after: " + day_after);
+			
+			if (clean.get(i).getTimestampMs() > day_after) {
+				locations.add(new Location(clean.get(i)));
+			}
+			
 			// Location is further than app min distance
 			
 			if (DS.getDistance(clean.get(i+1).getLatitudeE7(), 
@@ -93,6 +112,7 @@ public class JSONParser {
 				
 				locations.add(new Location(clean.get(i+1)));
 			}
+			
 		}
 		
 		return locations;
