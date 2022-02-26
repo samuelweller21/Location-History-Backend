@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +14,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 import com.samuelweller.Distance.DS;
 import com.samuelweller.Location.Location;
+import com.samuelweller.Shapefiles.CountriesService;
 
 //Location List
 public class LL {
@@ -129,7 +130,28 @@ public class LL {
 		return ll;
 	}
 	
-public Location getFirstLocationOnDate(Date date) {
+	public List<Location> getAllLocations() {
+		List<Location> list = new ArrayList();
+		for (int i = 0; i < this.getLocations().size(); i++) {
+			boolean toAdd = true;
+			Location current = this.getLocations().get(i);
+			for (int j = 0; j < list.size(); j++) {
+				if (DS.getDistance(list.get(j), current) < 100) {
+					toAdd = false;
+				}
+			}
+			if (toAdd) {
+				list.add(current);
+			}
+		}
+		return list;
+	}
+	
+	public String getCurrentCountry() {
+		return CountriesService.getCountry(this.current_location);
+	}
+	
+	public Location getFirstLocationOnDate(Date date) {
 		
 		// First clone LL object
 		LL ll = this.clone();

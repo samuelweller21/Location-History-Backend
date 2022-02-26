@@ -5,6 +5,12 @@ target/
 !**/src/test/**/target/
 *.JSON
 *.json
+*.shp
+*.shx
+*.xml
+*.cpg
+*.dbf
+**/src/main/resources/static/shapefile/**
 
 ### STS ###
 .apt_generated

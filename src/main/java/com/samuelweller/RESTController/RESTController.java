@@ -128,6 +128,12 @@ public class RESTController {
 		return colours;
 	}
 	
+	@GetMapping(path = "/getAllLocations/{user}")
+	public List<Location> getAllLocations(@PathVariable String user) {
+		System.out.println("Returning all location ... this may take a while");
+		return AWS.getAllLocations(user);
+	}
+	
 	//Util for above
 	
 	private static Calendar getCalendarWithoutTime(Date date) {

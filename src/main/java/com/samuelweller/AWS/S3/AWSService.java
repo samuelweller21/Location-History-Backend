@@ -1,28 +1,32 @@
 package com.samuelweller.AWS.S3;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.geotools.data.FileDataStore;
+import org.geotools.data.FileDataStoreFinder;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.data.simple.SimpleFeatureSource;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.opengis.feature.simple.SimpleFeature;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.samuelweller.JSONParsing.JSONParser;
 import com.samuelweller.Location.KnownLocation;
 import com.samuelweller.Location.Location;
 import com.samuelweller.LocationService.LL;
@@ -95,7 +99,7 @@ public class AWSService {
 		return r;
 	}
 
-	public void TESTcreateObject() {
+	public void TESTcreateObject() throws URISyntaxException, IOException {
 		
 		System.out.println("Parsing ... ");
 
@@ -128,6 +132,29 @@ public class AWSService {
 		
 		// Create Object
 //		this.createLocationsIfCan("sweller", parse);
+		
+//		// Get shapefile
+//		File file = new File(AWSService.class.getClassLoader().getResource("static/shapefiles/countries/World_Countries__Generalized_.shp").toURI());
+//		FileDataStore store = FileDataStoreFinder.getDataStore(file);
+//	    SimpleFeatureSource featureSource = store.getFeatureSource();
+//	    SimpleFeatureCollection collection = featureSource.getFeatures();
+//        SimpleFeatureIterator iterator = collection.features();
+//        
+//        while (iterator.hasNext()) {
+//        	SimpleFeature feature = iterator.next();
+//        	Geometry g = (Geometry) feature.getDefaultGeometry();
+//        	
+//        	GeometryFactory factory 
+//            = new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING), 4326);
+//        	g.contains(factory.createPoint(new Coordinate(-0.14849056956459844, 51.53927506054723)));
+//        	
+//        	if (g.contains(factory.createPoint(new Coordinate(-0.14849056956459844, 51.53927506054723)))) {
+//        		System.out.println("It's in " + feature.getAttribute("COUNTRYAFF"));
+//        	} else {
+////        		System.out.println("It's not in " + feature.getAttribute("COUNTRYAFF"));
+//        	}
+//        }
+//        System.out.println("Finished");
 	}
 
 	private void createLocationsIfCan(String user, List<Location> locations) {
@@ -139,6 +166,11 @@ public class AWSService {
 				this.createLocations(user, locations);
 			}
 		}
+	}
+	
+	@Cacheable(value = "uniqueLocations")
+	public List<Location> getAllLocations(String user) {
+		return this.getLocations(user).getAllLocations();
 	}
 	
 	public void deleteIfExists(String objectName) {
