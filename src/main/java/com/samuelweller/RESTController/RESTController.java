@@ -155,12 +155,25 @@ public class RESTController {
 		return AWS.getLocations(user).getFirstLocationOnDate(date);
 	}
 	
-	@PostMapping(path = "/addKnownLocation/{user}/{name}/{lat}/{lng}/{radius}")
-	public void addKnownLocation(@PathVariable String user, @PathVariable String name, 
+	@PostMapping(path = "/getLocationsOnDate/{user}")
+	public List<Location> getLocationsOnDate(@PathVariable String user, @RequestBody String json) {
+		System.out.println("##############################");
+		System.out.println("Receieved get locations on date request:");
+		
+		// Reverse as date reads in american date
+		String strDate = json.substring(12,15) + json.substring(9,12) + json.substring(15,19);
+		Date date = new Date(strDate);
+		System.out.println("##############################");
+		return AWS.getLocations(user).getAllLocationsOnDate(date).getLocations();
+	}
+	
+	@PostMapping(path = "/addKnownLocation/{user}/{name}/{lat}/{lng}/{radius}/{description}")
+	public void addKnownLocation(@PathVariable String user, @PathVariable String name,
 			@PathVariable double lat, 
 			@PathVariable double lng,
-			@PathVariable double radius) {
-		AWS.addKnownLocation(user, new KnownLocation(name, lng, lat, radius));
+			@PathVariable double radius,
+			@PathVariable String description) {
+		AWS.addKnownLocation(user, new KnownLocation(name, lng, lat, radius, description));
 		System.out.println("Created " + name + " in " + user);
 	}
 	

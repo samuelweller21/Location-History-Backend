@@ -24,6 +24,15 @@ public class KnownLocation implements Serializable {
 		this.radius = radius;
 	}
 	
+	public KnownLocation(String name, double lng, double lat, double radius, String description) {
+		super();
+		this.name = name;
+		this.lng = lng;
+		this.lat = lat;
+		this.radius = radius;
+		this.description = description;
+	}
+	
 	public KnownLocation(String name, String description, double lat, double lng) {
 		super();
 		this.name = name;

@@ -99,35 +99,35 @@ public class AWSService {
 		
 		System.out.println("Parsing ... ");
 
-		// Read data from csv
-		List<Location> data = null;
-		try {
-			BufferedReader csvReader = new BufferedReader(new InputStreamReader(
-					AWSService.class.getClassLoader().getResource("static/new_cleaned2.csv").openStream()));
-			CSVParser parser = new CSVParser(csvReader, CSVFormat.RFC4180);
-			data = this.toLocation(parser.getRecords());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		String json = null;
-		try {
-			json = Files.readString(Path.of(this.getClass().getResource("/static/locations.json").toURI()));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		long currentTimeMillis = System.currentTimeMillis();
-		List<Location> parse = JSONParser.parse(json);
-		System.out.println(parse.size());
-		System.out.println("Time taken to parse alone: " + (System.currentTimeMillis() - currentTimeMillis)/1000 + "s");
+//		// Read data from csv
+//		List<Location> data = null;
+//		try {
+//			BufferedReader csvReader = new BufferedReader(new InputStreamReader(
+//					AWSService.class.getClassLoader().getResource("static/new_cleaned2.csv").openStream()));
+//			CSVParser parser = new CSVParser(csvReader, CSVFormat.RFC4180);
+//			data = this.toLocation(parser.getRecords());
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		String json = null;
+//		try {
+//			json = Files.readString(Path.of(this.getClass().getResource("/static/locations.json").toURI()));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (URISyntaxException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		long currentTimeMillis = System.currentTimeMillis();
+//		List<Location> parse = JSONParser.parse(json);
+//		System.out.println(parse.size());
+//		System.out.println("Time taken to parse alone: " + (System.currentTimeMillis() - currentTimeMillis)/1000 + "s");
 
 		
 		// Create Object
-		this.createLocationsIfCan("sweller", parse);
+//		this.createLocationsIfCan("sweller", parse);
 	}
 
 	private void createLocationsIfCan(String user, List<Location> locations) {
