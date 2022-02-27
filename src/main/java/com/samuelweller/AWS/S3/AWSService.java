@@ -2,34 +2,26 @@ package com.samuelweller.AWS.S3;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVRecord;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.FileDataStoreFinder;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
-import org.opengis.feature.simple.SimpleFeature;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.samuelweller.Location.KnownLocation;
 import com.samuelweller.Location.Location;
+import com.samuelweller.Location.Vacation;
 import com.samuelweller.LocationService.LL;
+import com.samuelweller.Shapefiles.CountriesService;
 import com.samuelweller.config.ApplicationConfig;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -166,6 +158,29 @@ public class AWSService {
 				this.createLocations(user, locations);
 			}
 		}
+	}
+	
+	@Cacheable(value = "vacations")
+	public List<Vacation> buildVacations(String user, String homeCountry) {
+		List<Vacation> vacations = new ArrayList();
+		List<Location> locations = this.getLocations(user).getAllLocations();
+		String currentCountry = CountriesService.getCountry(locations.get(0));
+		int currentIndex = 0;
+		System.out.println("About to loop");
+		for (int i = 1; i < locations.size(); i++) {
+			String country = CountriesService.getCountry(locations.get(i));
+			if (!country.equals(currentCountry) && !country.equals("No country found")) {
+				if (!currentCountry.equals(homeCountry) && !currentCountry.equals("No country found")) {
+					vacations.add(new Vacation(currentIndex, i-1, 
+							new Date(locations.get(currentIndex).getTimestamp()*1000), 
+							new Date(locations.get(i-1).getTimestamp()*1000), 
+							currentCountry));
+				}
+				currentCountry = country;
+				currentIndex = i;
+			}
+		}
+		return vacations;
 	}
 	
 	@Cacheable(value = "uniqueLocations")

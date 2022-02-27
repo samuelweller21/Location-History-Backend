@@ -1,9 +1,5 @@
 package com.samuelweller.LocationHistoryViewer;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -13,8 +9,6 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 
 import com.samuelweller.AWS.S3.AWSService;
-import com.samuelweller.JSONParsing.JSONParser;
-import com.samuelweller.Location.Location;
 
 //docker run --detach --env MYSQL_ROOT_PASSWORD=sweller --env MYSQL_USER=sweller --env MYSQL_PASSWORD=sweller --env MYSQL_DATABASE=test --name mysql --publish 3306:3306 mysql:5.7
 
@@ -35,7 +29,6 @@ public class LocationHistoryViewerApplication implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 
 		AWS.TESTcreateObject();
-	
 	}
 
 }

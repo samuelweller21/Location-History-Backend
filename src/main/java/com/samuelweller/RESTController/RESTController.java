@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samuelweller.AWS.S3.AWSService;
 import com.samuelweller.Location.KnownLocation;
 import com.samuelweller.Location.Location;
+import com.samuelweller.Location.Vacation;
 import com.samuelweller.LocationService.DailySummary;
 import com.samuelweller.LocationService.DailySummaryObj;
 import com.samuelweller.LocationService.LL;
@@ -105,6 +106,7 @@ public class RESTController {
 		return ds;
 	}
 	
+	// Could easily cache
 	@GetMapping(path = "/getColours/{user}")
 	public List<Boolean> getColours(@PathVariable String user) {
 		System.out.println("Getting colours");
@@ -132,6 +134,16 @@ public class RESTController {
 	public List<Location> getAllLocations(@PathVariable String user) {
 		System.out.println("Returning all location ... this may take a while");
 		return AWS.getAllLocations(user);
+	}
+	
+//	@GetMapping(path = "/getCountries")
+//	public List<String> getCountries() {
+//		return CountriesService.getCountries();		
+//	}
+	
+	@GetMapping(path = "/getVacations/{user}/{homeCountry}") 
+	public List<Vacation> getVacations(@PathVariable String user, @PathVariable String homeCountry) {
+		return AWS.buildVacations(user, homeCountry);
 	}
 	
 	//Util for above

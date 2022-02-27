@@ -14,6 +14,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 import com.samuelweller.Distance.DS;
 import com.samuelweller.Location.Location;
+import com.samuelweller.Location.Vacation;
 import com.samuelweller.Shapefiles.CountriesService;
 
 //Location List
