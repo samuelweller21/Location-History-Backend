@@ -8,13 +8,19 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,15 +31,50 @@ import com.samuelweller.Location.Vacation;
 import com.samuelweller.LocationService.DailySummary;
 import com.samuelweller.LocationService.DailySummaryObj;
 import com.samuelweller.LocationService.LL;
+import com.samuelweller.jwt.AuthenticationRequest;
+import com.samuelweller.jwt.AuthenticationResponse;
+import com.samuelweller.jwt.JWTUtil;
+import com.samuelweller.jwt.LHVUserDetailsService;
 
 @RestController
 @CrossOrigin(origins="http://localhost:4200")
+@ComponentScan(basePackages = "com.samuelweller")
 public class RESTController {
+	
+	@Autowired
+	private AuthenticationManager authenticationManager;
 	
 	@Autowired
 	AWSService AWS;
 	
 	ObjectMapper mapper = new ObjectMapper();
+
+	@Autowired
+	private LHVUserDetailsService userDetailservice;
+	
+	@Autowired
+	private JWTUtil jwtTokenUtil;
+	
+	// Authentication
+	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+		
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+				authenticationRequest.getUsername(), 
+				authenticationRequest.getPassword()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username/password");
+		}
+		
+		final UserDetails userDetails = userDetailservice
+				.loadUserByUsername(authenticationRequest.getUsername());
+		
+		final String jwt = jwtTokenUtil.generateToken(userDetails);
+		
+		return ResponseEntity.ok(new AuthenticationResponse(jwt));
+	}
 	
 	// Movement
 	
