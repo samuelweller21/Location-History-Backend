@@ -1,6 +1,8 @@
 package com.samuelweller.RESTController;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +34,8 @@ import com.samuelweller.Location.Vacation;
 import com.samuelweller.LocationService.DailySummary;
 import com.samuelweller.LocationService.DailySummaryObj;
 import com.samuelweller.LocationService.LL;
+import com.samuelweller.UserManagement.DBUser;
+import com.samuelweller.UserManagement.UserRepoImpl;
 import com.samuelweller.jwt.AuthenticationRequest;
 import com.samuelweller.jwt.AuthenticationResponse;
 import com.samuelweller.jwt.JWTUtil;
@@ -42,10 +47,13 @@ import com.samuelweller.jwt.LHVUserDetailsService;
 public class RESTController {
 	
 	@Autowired
-	private AuthenticationManager authenticationManager;
+	AuthenticationManager authenticationManager;
 	
 	@Autowired
 	AWSService AWS;
+	
+	@Autowired
+	UserRepoImpl userRepo;
 	
 	ObjectMapper mapper = new ObjectMapper();
 
@@ -76,46 +84,81 @@ public class RESTController {
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 	
+	@RequestMapping(value = "/createUser", method = RequestMethod.POST)
+	public ResponseEntity<?> createUser(@RequestBody DBUser user) throws Exception {
+		
+		if (userRepo.addUser(user)) {
+			return ResponseEntity.ok(new AuthenticationResponse("Created user"));
+		} else {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Could not create user - you probably already have an account using that email");
+		}
+		
+	}
+	
+	@RequestMapping(value = "/test", method = RequestMethod.POST)
+	public ResponseEntity<?> test(@RequestHeader("Authorization") String jwt) {
+		return ResponseEntity.ok(new AuthenticationResponse("Ok"));
+	}
+	
+	@RequestMapping(value = "/deleteUser", method = RequestMethod.POST)
+	public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String jwt) throws Exception {
+		
+		String username = jwtTokenUtil.extractUsername(jwt.substring(7));
+		
+		userRepo.deleteUser(username);
+		
+		return ResponseEntity.ok(new AuthenticationResponse("Deleted user - " + username));
+		
+	}
+	
 	// Movement
 	
 	@GetMapping(path = "/location")
-	public Location getLocation() {
-		return AWS.getLocations("sweller").getLocations().get(1000);
+	public Location getLocation(@RequestHeader("Authorization") String jwt) {
+		String username = jwtTokenUtil.extractUsername(jwt.substring(7));
+		return AWS.getLocations(username).getLocations().get(1000);
 	}
 
-	@GetMapping(path = "/nextLocation/{user}/{timestamp}")
-	public Location getNextLocation(@PathVariable String user, @PathVariable long timestamp) {
+	@GetMapping(path = "/nextLocation/{timestamp}")
+	public Location getNextLocation(@RequestHeader("Authorization") String jwt, @PathVariable long timestamp) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getLocations(user).setCurrentLocation(timestamp).getNextLocation();
 	}
 
-	@GetMapping(path = "/nextDay/{user}/{timestamp}")
-	public Location getNextDay(@PathVariable String user, @PathVariable long timestamp) {
+	@GetMapping(path = "/nextDay/{timestamp}")
+	public Location getNextDay(@PathVariable long timestamp, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getLocations(user).setCurrentLocation(timestamp).moveDay().getCurrentLocation();
 	}
 	
-	@GetMapping(path = "/previousLocation/{user}/{timestamp}")
-	public Location getPreviousLocation(@PathVariable String user, @PathVariable long timestamp) {
+	@GetMapping(path = "/previousLocation/{timestamp}")
+	public Location getPreviousLocation( @PathVariable long timestamp, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getLocations(user).setCurrentLocation(timestamp).getPreviousLocation();
 	}
 
-	@GetMapping(path = "/previousDay/{user}/{timestamp}")
-	public Location getPreviousDay(@PathVariable String user, @PathVariable long timestamp) {
+	@GetMapping(path = "/previousDay/{timestamp}")
+	public Location getPreviousDay(@PathVariable long timestamp, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println(AWS.getLocations(user).setCurrentLocation(timestamp).getAllLocationsOnCurrentDay());
 		return AWS.getLocations(user).setCurrentLocation(timestamp).moveDay(-1).getCurrentLocation();
 	}
 	
-	@GetMapping(path = "/firstDate/{user}")
-	public Date getFirstDate(@PathVariable String user) {
+	@GetMapping(path = "/firstDate")
+	public Date getFirstDate( @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getLocations(user).getFirstDate();
 	}
 	
-	@GetMapping(path = "/lastDate/{user}")
-	public Date getLastDate(@PathVariable String user) {
+	@GetMapping(path = "/lastDate")
+	public Date getLastDate(@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getLocations(user).getLastDate();
 	}
 	
-	@GetMapping(path = "/firstLastDates/{user}")
-	public List<String> getFirstLastDates(@PathVariable String user) {
+	@GetMapping(path = "/firstLastDates")
+	public List<String> getFirstLastDates(@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		List<String> dates = new ArrayList<String>();
 		dates.add(new SimpleDateFormat("yyyy-MM-dd").format(AWS.getLocations(user).getFirstDate()));
 		dates.add(new SimpleDateFormat("yyyy-MM-dd").format(AWS.getLocations(user).getLastDate()));
@@ -126,18 +169,20 @@ public class RESTController {
 	// Mass return
 	
 	@GetMapping(path = "/getLocationsThisWeek/{timestamp}")
-	public List<Location> getLocationsThisWeek(@PathVariable long timestamp) {
+	public List<Location> getLocationsThisWeek(@PathVariable long timestamp, @RequestHeader("Authorization") String jwt) {
 		// To do
 		return null;
 	}
 	
-	@GetMapping(path = "/getKnownLocations/{user}")
-	public List<KnownLocation> getKnownLocations(@PathVariable String user) {
+	@GetMapping(path = "/getKnownLocations")
+	public List<KnownLocation> getKnownLocations(@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.getKnownLocations(user);
 	}
 	
-	@GetMapping(path = "/getDailySummary/{user}/{date}")
-	public List<DailySummaryObj> getDailySummary(@PathVariable String user, @PathVariable Date date) {
+	@GetMapping(path = "/getDailySummary/{date}")
+	public List<DailySummaryObj> getDailySummary(@PathVariable Date date, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println("##############################");
 		System.out.println("Receieved daily summary request:");
 		LL locsOnDay = AWS.getLocations(user);
@@ -148,8 +193,10 @@ public class RESTController {
 	}
 	
 	// Could easily cache
-	@GetMapping(path = "/getColours/{user}")
-	public List<Boolean> getColours(@PathVariable String user) {
+	@GetMapping(path = "/getColours")
+	public List<Boolean> getColours(@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
+		System.out.println(user);
 		System.out.println("Getting colours");
 		List<Date> datesInRange = new ArrayList<>();
 		LL locations = AWS.getLocations(user);
@@ -171,8 +218,9 @@ public class RESTController {
 		return colours;
 	}
 	
-	@GetMapping(path = "/getAllLocations/{user}")
-	public List<Location> getAllLocations(@PathVariable String user) {
+	@GetMapping(path = "/getAllLocations")
+	public List<Location> getAllLocations(@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println("Returning all location ... this may take a while");
 		return AWS.getAllLocations(user);
 	}
@@ -182,11 +230,12 @@ public class RESTController {
 //		return CountriesService.getCountries();		
 //	}
 	
-	@GetMapping(path = "/getVacations/{user}/{homeCountry}") 
-	public List<Vacation> getVacations(@PathVariable String user, @PathVariable String homeCountry) {
+	@GetMapping(path = "/getVacations/{homeCountry}") 
+	public List<Vacation> getVacations(@PathVariable String homeCountry, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		return AWS.buildVacations(user, homeCountry);
 	}
-	
+
 	//Util for above
 	
 	private static Calendar getCalendarWithoutTime(Date date) {
@@ -202,42 +251,76 @@ public class RESTController {
 	
 	// Posts
 	
-	@PostMapping(path = "/getLocationOnDate/{user}")
-	public Location getLocationOnDate(@PathVariable String user, @RequestBody String json) {
+	@PostMapping(path = "/getLocationOnDate")
+	public Location getLocationOnDate(@RequestBody String json, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println("##############################");
 		System.out.println("Receieved get location on date request:");
 		
 		// Reverse as date reads in american date
 		String strDate = json.substring(12,15) + json.substring(9,12) + json.substring(15,19);
 		Date date = new Date(strDate);
+		System.out.println(json);
+		System.out.println(strDate);
 		System.out.println("##############################");
 		return AWS.getLocations(user).getFirstLocationOnDate(date);
 	}
 	
-	@PostMapping(path = "/getLocationsOnDate/{user}")
-	public List<Location> getLocationsOnDate(@PathVariable String user, @RequestBody String json) {
+	@PostMapping(path = "/getAllLocationsFromTo")
+	public List<Location> getAllLocationsFromTo(@RequestBody String json, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
+		System.out.println("##############################");
+		System.out.println("Receieved get all locations from/to date request:");
+		
+		System.out.println(json);
+		
+		// Reverse as date reads in american date
+		String strDate1 = json.substring(9,19);
+		Date date1 = Date.from(LocalDate.parse(strDate1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		String strDate2 = json.substring(36,46);
+		Date date2 = Date.from(LocalDate.parse(strDate2).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		
+		System.out.println(strDate1);
+		System.out.println(strDate2);
+		
+		System.out.println(date1);
+		System.out.println(date2);
+		
+		System.out.println("##############################");
+		return AWS.getLocations(user).getLocationsFromTo(date1, date2);
+	}
+	
+	@PostMapping(path = "/getLocationsOnDate")
+	public List<Location> getLocationsOnDate(@RequestBody String json, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println("##############################");
 		System.out.println("Receieved get locations on date request:");
 		
 		// Reverse as date reads in american date
 		String strDate = json.substring(12,15) + json.substring(9,12) + json.substring(15,19);
 		Date date = new Date(strDate);
+		
+		System.out.println(json);
+		System.out.println(strDate);
 		System.out.println("##############################");
 		return AWS.getLocations(user).getAllLocationsOnDate(date).getLocations();
 	}
 	
-	@PostMapping(path = "/addKnownLocation/{user}/{name}/{lat}/{lng}/{radius}/{description}")
-	public void addKnownLocation(@PathVariable String user, @PathVariable String name,
+	@PostMapping(path = "/addKnownLocation/{name}/{lat}/{lng}/{radius}/{description}")
+	public void addKnownLocation(@PathVariable String name,
 			@PathVariable double lat, 
 			@PathVariable double lng,
 			@PathVariable double radius,
-			@PathVariable String description) {
-		AWS.addKnownLocation(user, new KnownLocation(name, lng, lat, radius, description));
+			@PathVariable String description,
+			@RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
+		AWS.addKnownLocation(user, new KnownLocation(name, description, lng, lat, radius));
 		System.out.println("Created " + name + " in " + user);
 	}
 	
-	@PostMapping(path = "/removeKnownLocation/{user}/{name}")
-	public ResponseEntity<String> removeKnownLocation(@PathVariable String user, @PathVariable String name) {
+	@PostMapping(path = "/removeKnownLocation/{name}")
+	public ResponseEntity<String> removeKnownLocation(@PathVariable String name, @RequestHeader("Authorization") String jwt) {
+		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		List<KnownLocation> kl = AWS.getKnownLocations(user);
 		KnownLocation toDelete = kl.stream().filter(loc -> loc.getName().equals(name)).findFirst().get();
 		System.out.println(toDelete);

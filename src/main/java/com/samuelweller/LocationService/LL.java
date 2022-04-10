@@ -171,6 +171,24 @@ public class LL {
 		}
 	}
 	
+public List<Location> getLocationsFromTo(Date startDate, Date endDate) {
+		
+		// First clone LL object
+		LL ll = this.clone();
+		
+		LocalDate ldate = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		long startTime = ldate.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+		
+		LocalDate edate = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		long endTime = edate.plusDays(1L).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+		
+		
+		// Filter locations
+		List<Location> all = ll.locations.stream().filter(l -> l.getTimestamp() > startTime && l.getTimestamp() < endTime).collect(Collectors.toList()); 
+		
+		return all;
+	}
+	
 	public LL getAllLocationsOnCurrentDay() {
 		
 		LL ll = this.clone();

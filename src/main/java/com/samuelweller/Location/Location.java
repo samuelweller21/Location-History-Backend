@@ -4,6 +4,13 @@ import java.io.Serializable;
 
 import com.samuelweller.JSONParsing.GoogleJSONMapper;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
 public class Location implements Serializable {
 
 	private static final long serialVersionUID = 7648747914493611668L;
@@ -12,14 +19,6 @@ public class Location implements Serializable {
 	private double lat;
 	private long timestamp;
 	private double accuracy;
-	
-	public double getAccuracy() {
-		return accuracy;
-	}
-
-	public void setAccuracy(double accuracy) {
-		this.accuracy = accuracy;
-	}
 
 	public Location(double lng, double lat, long timestamp) {
 		this.lng = lng;
@@ -37,40 +36,6 @@ public class Location implements Serializable {
 		this.lat = json.getLatitudeE7();
 		this.accuracy = json.getAccuracy();
 		this.timestamp = (long) json.getTimestampMs();
-	}
-
-	@Override
-	public String toString() {
-		return "Location [lng=" + lng + ", lat=" + lat + ", timestamp=" + timestamp + "]";
-	}
-
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
-
-
-	public double getLng() {
-		return lng;
-	}
-
-
-	public void setLng(double lng) {
-		this.lng = lng;
-	}
-
-
-	public double getLat() {
-		return lat;
-	}
-
-
-	public void setLat(double lat) {
-		this.lat = lat;
 	}
 	
 }
