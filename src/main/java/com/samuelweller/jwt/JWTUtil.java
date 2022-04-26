@@ -16,6 +16,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class JWTUtil {
 
 	private String SECRET_KEY = "38D2C4AB54AF9D3F66E3A4EFDB287355ED93F165F2B97DD02FE8E7A4A657FA8E";
+	private final int JWT_expiration = 1000*60*60;
+//	private final int JWT_expiration = 10*1000;
 	
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -45,7 +47,7 @@ public class JWTUtil {
 	
 	public String createToken(Map<String, Object> claims, String subject) {
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 100*60*60*10))
+				.setExpiration(new Date(System.currentTimeMillis() + JWT_expiration))
 				.signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
 	}
 	
