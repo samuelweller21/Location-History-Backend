@@ -11,9 +11,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.samuelweller.AWS.S3.AWSService;
+import com.samuelweller.Mail.EmailServiceImpl;
 
 //docker run --detach --env MYSQL_ROOT_PASSWORD=sweller --env MYSQL_USER=sweller --env MYSQL_PASSWORD=sweller --env MYSQL_DATABASE=test --name mysql --publish 3306:3306 mysql:5.7
-//\connect 
+//\connect sweller@localhost:3306
 
 @EnableCaching
 @SpringBootApplication()
@@ -25,6 +26,9 @@ public class LocationHistoryViewerApplication extends SpringBootServletInitializ
 	@Autowired
 	AWSService AWS;
 	
+	@Autowired
+	EmailServiceImpl es;
+	
 	public static void main(String[] args) {
 		
 		SpringApplication.run(LocationHistoryViewerApplication.class, args);
@@ -34,6 +38,10 @@ public class LocationHistoryViewerApplication extends SpringBootServletInitializ
 	public void run(String... args) throws Exception {
 
 		AWS.TESTcreateObject();
+		
+		// Send test email
+		
+		//es.sendSimpleMessage("samuelweller21@hotmail.com", "Testing", "Hello, this is a test email \n \n And this is on a new line");
 	}
 
 }

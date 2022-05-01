@@ -9,7 +9,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,7 @@ import com.samuelweller.Location.Vacation;
 import com.samuelweller.LocationService.DailySummary;
 import com.samuelweller.LocationService.DailySummaryObj;
 import com.samuelweller.LocationService.LL;
+import com.samuelweller.Mail.EmailServiceImpl;
 import com.samuelweller.UserManagement.DBUser;
 import com.samuelweller.UserManagement.UserRepoImpl;
 import com.samuelweller.jwt.AuthenticationRequest;
@@ -63,6 +66,12 @@ public class RESTController {
 	@Autowired
 	private JWTUtil jwtTokenUtil;
 	
+	@Autowired
+	EmailServiceImpl ES;
+	
+	@Value("${domain.address}")
+	String domainAddress;
+	
 	// Authentication
 	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
@@ -85,12 +94,52 @@ public class RESTController {
 	}
 	
 	@RequestMapping(value = "/createUser", method = RequestMethod.POST)
-	public ResponseEntity<?> createUser(@RequestBody DBUser user) throws Exception {
+	public ResponseEntity<?> createUser(@RequestBody String raw) throws Exception {
+		
+		JSONObject json = new JSONObject(raw);
+		
+		String jwt = json.getString("jwt");
+		if (jwtTokenUtil.isTokenExpired(jwt)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Link expired");
+		} else if (!jwtTokenUtil.extractUsername(jwt).equals(json.getString("username"))) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usernames did not match");
+		}
+		
+		DBUser user = new DBUser(json.getString("username"), json.getString("password"));
 		
 		if (userRepo.addUser(user)) {
 			return ResponseEntity.ok(new AuthenticationResponse("Created user"));
 		} else {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Could not create user - you probably already have an account using that email");
+		}
+		
+	}
+	
+	@RequestMapping(value = "/updatePassword", method = RequestMethod.POST)
+	public ResponseEntity<?> updatePassword(@RequestBody String raw) throws Exception {
+		
+		JSONObject json = new JSONObject(raw);
+		
+		String jwt = json.getString("jwt");
+		if (jwtTokenUtil.isTokenExpired(jwt)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Link expired");
+		} else if (!jwtTokenUtil.extractUsername(jwt).equals(json.getString("username"))) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usernames did not match");
+		}
+		
+		//Check if they already have an account
+		if (userRepo.findUser(json.getString("username")).size() == 0) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have an account");
+		}
+		
+		DBUser user = new DBUser(json.getString("username"), json.getString("password"));
+		
+		userRepo.deleteUser(json.getString("username"));
+		
+		if (userRepo.addUser(user)) {
+			return ResponseEntity.ok(new AuthenticationResponse("Changed password"));
+		} else {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Could not change password for some reason");
 		}
 		
 	}
@@ -108,6 +157,75 @@ public class RESTController {
 		userRepo.deleteUser(username);
 		
 		return ResponseEntity.ok(new AuthenticationResponse("Deleted user - " + username));
+		
+	}
+	
+	@RequestMapping(value = "/createUserGetJWT", method = RequestMethod.POST)
+	public ResponseEntity<String> createUserGetJWT(@RequestBody String raw) {
+		System.out.println(raw);
+		JSONObject json = new JSONObject(raw);
+		System.out.println(json.getString("email"));
+		
+		//Check if they already have an account
+		if (userRepo.findUser(json.getString("email")).size() > 0) {
+			System.out.println("User already exists");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You already have an account");
+		}
+		
+		System.out.println(jwtTokenUtil.createCreateAccountToken(json.getString("email")));
+		
+		System.out.println(domainAddress);
+		
+		// Send email
+		ES.sendSimpleMessage(json.getString("email"), "Welcome to LHV", "Hi there,\n\nThanks for joining us! To finish creating your account please go "
+				+ "to this link:\n\n" + domainAddress + "/emailconfirmation/" + jwtTokenUtil.createCreateAccountToken(json.getString("email")) + "\n\nThe LHV Team");
+		
+		System.out.println(jwtTokenUtil.createCreateAccountToken(json.getString("email")));
+		
+		
+		return ResponseEntity.status(HttpStatus.OK).body("Check your email");
+	}
+		
+	@RequestMapping(value = "/resetPassword", method = RequestMethod.POST)
+	public ResponseEntity<String> resetPassword(@RequestBody String raw) {
+		System.out.println(raw);
+		JSONObject json = new JSONObject(raw);
+		System.out.println(json.getString("email"));
+		
+		//Check if they already have an account
+		if (userRepo.findUser(json.getString("email")).size() == 0) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have an account yet");
+		}
+		
+		System.out.println(jwtTokenUtil.createCreateAccountToken(json.getString("email")));
+		
+		System.out.println(domainAddress);
+		
+		// Send email
+		ES.sendSimpleMessage(json.getString("email"), "LHV Password Reset", "Hi there,\n\nYou've requested a password reset. Head to the link below to change your password "
+				+ "to this link:\n\n" + domainAddress + "/resetPassword/" + jwtTokenUtil.createCreateAccountToken(json.getString("email")) + "\n\nThe LHV Team");
+		
+		System.out.println(jwtTokenUtil.createCreateAccountToken(json.getString("email")));
+		
+		
+		return ResponseEntity.status(HttpStatus.OK).body("Check your email");
+	}
+	
+	
+	@RequestMapping(value = "/createUserGetUsername", method = RequestMethod.POST)
+	public ResponseEntity<String> createUserGetUsername(@RequestBody String raw) {
+		JSONObject json = new JSONObject(raw);
+		System.out.println("Username: " + jwtTokenUtil.extractUsername(json.getString("jwt")));
+		if (jwtTokenUtil.isTokenExpired(json.getString("jwt"))) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sorry, that wasn't valid");
+		} else {
+			return ResponseEntity.status(HttpStatus.OK).body(jwtTokenUtil.extractUsername(json.getString("jwt")));
+		}
+	}
+	
+	@GetMapping(value = "/getUsername")
+	public String getUsername(@RequestHeader("Authorization") String jwt) throws Exception {
+		return jwtTokenUtil.extractUsername(jwt.substring(7));
 		
 	}
 	

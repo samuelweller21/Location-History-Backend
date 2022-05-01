@@ -16,7 +16,7 @@
 	<artifactId>Location-History-Viewer</artifactId>
 
 	<version>0.0.1-SNAPSHOT</version>
-	
+
 	<packaging>war</packaging>
 
 	<name>Location-History-Viewer</name>
@@ -165,6 +165,22 @@
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-swing</artifactId>
 			<version>${geotools.version}</version>
+		</dependency>
+
+		<!-- Support for some third party libraries e.g. Java Mail -->
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>5.3.19</version>
+		</dependency>
+
+		<!-- Mail -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+			<version>2.6.7</version>
 		</dependency>
 
 	</dependencies>
