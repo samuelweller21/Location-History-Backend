@@ -47,7 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		// Do not allow session auth - JWT only!
 		
 		http.cors().and().csrf().disable().authorizeRequests()
-		.antMatchers("/authenticate", "/createUser", "/createUserGetJWT", "/createUserGetUsername", "/resetPassword", "/updatePassword").permitAll().anyRequest()
+		.antMatchers("/authenticate", "/test", "/createUser", "/createUserGetJWT", "/createUserGetUsername", "/resetPassword", "/updatePassword").permitAll().anyRequest()
 		.authenticated().and().sessionManagement()
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		

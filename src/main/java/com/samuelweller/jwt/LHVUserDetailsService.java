@@ -23,7 +23,7 @@ public class LHVUserDetailsService implements UserDetailsService {
 	
 	@PostConstruct
 	public void postConstruct() {
-		userRepo.addUser(new DBUser("sweller", "sweller"));
+		userRepo.addUser(new DBUser("sweller", "$2a$10$nmzjN21Ti0f7w8hcrgcms.BXkZPMh/Vnh33EgOWz2cpjdXpYiQupG"));
 		userRepo.addUser(new DBUser("samuelweller21@hotmail.com", "testPW"));
 		userRepo.addUser(new DBUser("samuelweller22@hotmail.com", "testPW123"));
 		userRepo.addUser(new DBUser("samuelweller23@hotmail.com", "testPW332"));

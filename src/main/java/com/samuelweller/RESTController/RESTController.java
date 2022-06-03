@@ -313,6 +313,7 @@ public class RESTController {
 	// Could easily cache
 	@GetMapping(path = "/getColours")
 	public List<Boolean> getColours(@RequestHeader("Authorization") String jwt) {
+		Long first = System.currentTimeMillis();
 		String user = jwtTokenUtil.extractUsername(jwt.substring(7));
 		System.out.println(user);
 		System.out.println("Getting colours");
@@ -332,6 +333,8 @@ public class RESTController {
 		for (int i = 0; i < datesInRange.size(); i++) {
 			colours.add((locations.getAllLocationsOnDate(datesInRange.get(i)).getLocations().size() != 0) ? true : false);
 		}
+		
+		System.out.println("Took " + (System.currentTimeMillis() - first) + " ms");
 		
 		return colours;
 	}
